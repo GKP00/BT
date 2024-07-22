@@ -7,7 +7,10 @@
 namespace BT::BEncoding
 {
 
-enum Type
+using BInt = int;
+using BStr = std::string;
+
+enum class Type
 {
   BInt,
   BStr,
@@ -19,14 +22,14 @@ enum Type
 Type PeekNext(std::istream& stream)
 {
   char next = stream.peek();
-  return next == 'i' ? BInt  :
-         next == 'l' ? BList :
-         next == 'd' ? BDict :
-         std::isdigit(next) && next != '0' ? BStr :
-         INVALID;
+  return next == 'i' ? Type::BInt  :
+         next == 'l' ? Type::BList :
+         next == 'd' ? Type::BDict :
+         std::isdigit(next) && next != '0' ? Type::BStr :
+         Type::INVALID;
 }
 
-int ParseBInt(std::istream& stream)
+BInt ParseBInt(std::istream& stream)
 {
   //check for start identifier char 'i'
   if(stream.peek() != 'i')
@@ -72,7 +75,7 @@ int ParseBInt(std::istream& stream)
   return num;
 }
 
-std::string ParseBStr(std::istream& stream)
+BStr ParseBStr(std::istream& stream)
 {
   //read len string
   std::vector<char> lenChars;
