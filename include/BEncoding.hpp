@@ -3,12 +3,21 @@
 #include <charconv>
 #include <istream>
 #include <vector>
+#include <variant>
 
 namespace BT::BEncoding
 {
 
 using BInt = int;
 using BStr = std::string;
+
+struct BElement;
+using BList = std::vector<BElement>;
+
+struct BElement : public std::variant<BInt, BStr, BList>
+{
+  using std::variant<BInt, BStr, BList>::variant;
+};
 
 enum class Type
 {
@@ -105,6 +114,37 @@ BStr ParseBStr(std::istream& stream)
     str += stream.get();
 
   return str;
+}
+
+BList ParseBList(std::istream& stream)
+{
+  //check for start identifier char 'l'
+  if(stream.peek() != 'l')
+    throw std::runtime_error{"invalid blist: no start identifier"};
+
+  //consume start idenfitier
+  stream.get();
+
+  std::vector<BElement> list;
+
+  //parse list elements until end idenfitier 'e' is encountered
+  while(stream.peek() != 'e')
+  {
+    switch(PeekNext(stream))
+    {
+      case Type::BStr: list.emplace_back( ParseBStr(stream) ); break;
+      case Type::BInt: list.emplace_back( ParseBInt(stream) ); break;
+      case Type::BList: list.emplace_back( ParseBList(stream) ); break;
+
+      case Type::BDict:
+      case Type::INVALID:
+        throw std::runtime_error{"invalid blist: invalid or unimplemented element encountered"};
+
+    }
+
+  }
+  stream.get();
+  return list;
 }
 
 } //namespace: BT::BEncoding
