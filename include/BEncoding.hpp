@@ -72,4 +72,36 @@ int ParseBInt(std::istream& stream)
   return num;
 }
 
+std::string ParseBStr(std::istream& stream)
+{
+  //read len string
+  std::vector<char> lenChars;
+  while( std::isdigit(stream.peek()) )
+    lenChars.push_back(stream.get());
+
+  if(lenChars.size() == 0)
+    throw std::runtime_error{"invalid bstr: invalid str len before ':'"};
+
+  //check for ':'
+  if(stream.peek() != ':')
+    throw std::runtime_error{"invalid bstr: no ':' found"};
+
+  //consume ':'
+  stream.get();
+
+  //convert len str to int
+  int len;
+  auto [ptr, err] = std::from_chars(lenChars.data(), lenChars.data()+lenChars.size(), len);
+
+  if(err != std::errc())
+    throw std::runtime_error{"invalid bstr: std::from_chars failed"};
+
+  //read string off stream
+  std::string str;
+  while(len--)
+    str += stream.get();
+
+  return str;
+}
+
 } //namespace: BT::BEncoding
