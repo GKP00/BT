@@ -44,6 +44,28 @@ struct BElem : public BElemVariant
 {
   using BElemVariant::variant;
 
+  BElem& operator[](const BStr& key)
+  {
+    if(this->GetType() != Type::BDict)
+      throw std::runtime_error{"using operator[](BStr) on non BDict"};
+
+    return std::get<BDict>(*this)[key];
+  }
+
+  BElem& operator[](const BInt& index)
+  {
+    if(this->GetType() != Type::BList)
+      throw std::runtime_error{"using operator[](BInt) on non BList"};
+
+    return std::get<BList>(*this)[index];
+  }
+
+  template<typename T>
+  T& As()
+  {
+    return std::get<T>(*this);
+  }
+
   Type GetType() const
   {
     return std::holds_alternative<BInt>(*this)  ? Type::BInt  :
